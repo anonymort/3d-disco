@@ -106,25 +106,8 @@ function createLeftWallWithEntrance(wallMaterial) {
 export function createEntrance() {
     const entranceObjects = [];
 
-    // Entrance tunnel
-    const tunnelGeometry = new THREE.BoxGeometry(
-        ENTRANCE_CONFIG.tunnelDepth,
-        ENTRANCE_CONFIG.height,
-        ENTRANCE_CONFIG.width
-    );
-    const tunnelMaterial = new THREE.MeshStandardMaterial({
-        color: COLORS.wall,
-        roughness: 0.8,
-        metalness: 0.3
-    });
-    const tunnel = new THREE.Mesh(tunnelGeometry, tunnelMaterial);
-    tunnel.position.set(
-        -ROOM_CONFIG.size / 2 - ENTRANCE_CONFIG.tunnelDepth / 2,
-        ENTRANCE_CONFIG.height / 2,
-        ENTRANCE_CONFIG.zOffset
-    );
-    tunnel.receiveShadow = true;
-    entranceObjects.push(tunnel);
+    // Entrance tunnel removed - was creating black void
+    // Now you can see through to the steps
 
     // Archway frame
     const archFrameMaterial = new THREE.MeshStandardMaterial({
@@ -158,7 +141,10 @@ export function createEntrance() {
     );
     entranceObjects.push(rightFrame);
 
-    // Steps
+    // Steps - top step at floor level (y=0), descending down
+    const tunnelLength = ENTRANCE_CONFIG.stepCount * ENTRANCE_CONFIG.stepDepth;
+    const tunnelHeight = ENTRANCE_CONFIG.height;
+
     for (let i = 0; i < ENTRANCE_CONFIG.stepCount; i++) {
         const stepGeometry = new THREE.BoxGeometry(
             ENTRANCE_CONFIG.stepDepth,
@@ -171,15 +157,73 @@ export function createEntrance() {
             metalness: 0.2
         });
         const step = new THREE.Mesh(stepGeometry, stepMaterial);
+        // Top step (i=0) at floor level, each step down
         step.position.set(
-            -ROOM_CONFIG.size / 2 - ENTRANCE_CONFIG.tunnelDepth - (i * ENTRANCE_CONFIG.stepDepth),
-            ENTRANCE_CONFIG.stepHeight / 2 + (ENTRANCE_CONFIG.stepCount - 1 - i) * ENTRANCE_CONFIG.stepHeight,
+            -ROOM_CONFIG.size / 2 - (i * ENTRANCE_CONFIG.stepDepth),
+            ENTRANCE_CONFIG.stepHeight / 2 - (i * ENTRANCE_CONFIG.stepHeight),
             ENTRANCE_CONFIG.zOffset
         );
         step.castShadow = true;
         step.receiveShadow = true;
         entranceObjects.push(step);
     }
+
+    // Tunnel walls enclosing the steps
+    const tunnelMaterial = new THREE.MeshStandardMaterial({
+        color: 0x1a1a1a,
+        roughness: 0.8,
+        metalness: 0.3
+    });
+
+    // Left tunnel wall - full height matching doorframe
+    const leftTunnelWall = new THREE.BoxGeometry(tunnelLength, ENTRANCE_CONFIG.height, 0.2);
+    const leftWall = new THREE.Mesh(leftTunnelWall, tunnelMaterial);
+    leftWall.position.set(
+        -ROOM_CONFIG.size / 2 - tunnelLength / 2,
+        ENTRANCE_CONFIG.height / 2, // Centered vertically to match doorframe
+        ENTRANCE_CONFIG.zOffset - ENTRANCE_CONFIG.width / 2
+    );
+    entranceObjects.push(leftWall);
+
+    // Right tunnel wall - full height matching doorframe
+    const rightTunnelWall = new THREE.BoxGeometry(tunnelLength, ENTRANCE_CONFIG.height, 0.2);
+    const rightWall = new THREE.Mesh(rightTunnelWall, tunnelMaterial);
+    rightWall.position.set(
+        -ROOM_CONFIG.size / 2 - tunnelLength / 2,
+        ENTRANCE_CONFIG.height / 2, // Centered vertically to match doorframe
+        ENTRANCE_CONFIG.zOffset + ENTRANCE_CONFIG.width / 2
+    );
+    entranceObjects.push(rightWall);
+
+    // Tunnel ceiling - at exact top of doorframe
+    const tunnelCeiling = new THREE.BoxGeometry(tunnelLength, 0.2, ENTRANCE_CONFIG.width);
+    const ceiling = new THREE.Mesh(tunnelCeiling, tunnelMaterial);
+    ceiling.position.set(
+        -ROOM_CONFIG.size / 2 - tunnelLength / 2,
+        ENTRANCE_CONFIG.height - 0.1, // Just below top of archway
+        ENTRANCE_CONFIG.zOffset
+    );
+    entranceObjects.push(ceiling);
+
+    // Small visible light bulb in tunnel
+    const bulbGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+    const bulbMaterial = new THREE.MeshStandardMaterial({
+        color: 0xffaa00,
+        emissive: 0xffaa00,
+        emissiveIntensity: 2
+    });
+    const bulb = new THREE.Mesh(bulbGeometry, bulbMaterial);
+    bulb.position.set(
+        -ROOM_CONFIG.size / 2 - tunnelLength / 2,
+        ENTRANCE_CONFIG.height - 0.5, // Hanging from ceiling
+        ENTRANCE_CONFIG.zOffset
+    );
+    entranceObjects.push(bulb);
+
+    // Point light from the bulb
+    const tunnelLight = new THREE.PointLight(0xffaa00, 5, tunnelLength * 2);
+    tunnelLight.position.copy(bulb.position);
+    entranceObjects.push(tunnelLight);
 
     // Exit sign
     const signWidth = 2.5;
@@ -188,9 +232,9 @@ export function createEntrance() {
 
     const signGeometry = new THREE.BoxGeometry(signWidth, signHeight, signDepth);
     const signMaterial = new THREE.MeshStandardMaterial({
-        color: 0x00aa00,
-        emissive: 0x00ff00,
-        emissiveIntensity: 1.5,
+        color: 0x006600,
+        emissive: 0x00aa00,
+        emissiveIntensity: 0.5, // Reduced from 1.5 to tone down brightness
         roughness: 0.3,
         metalness: 0.1
     });
@@ -199,7 +243,7 @@ export function createEntrance() {
     exitSign.rotation.y = Math.PI / 2;
     entranceObjects.push(exitSign);
 
-    // Exit text
+    // Exit text - darker with higher contrast
     const exitTextGroup = createExitText();
     exitTextGroup.position.copy(exitSign.position);
     exitTextGroup.rotation.y = Math.PI / 2;
@@ -210,9 +254,11 @@ export function createEntrance() {
 
 function createExitText() {
     const textMaterial = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
+        color: 0xffffff, // White text
         emissive: 0xffffff,
-        emissiveIntensity: 2
+        emissiveIntensity: 3, // Bright so it stands out
+        roughness: 0.1,
+        metalness: 0
     });
 
     const exitTextGroup = new THREE.Group();
