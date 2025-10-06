@@ -3,7 +3,7 @@ import { CAMERA_CONFIG, ROOM_CONFIG, ENTRANCE_CONFIG } from './config.js';
 export function setupCameraControls(camera) {
     const keys = {};
     let cameraRotation = 0;
-    const moveSpeed = 0.1;
+    const moveSpeed = 0.125; // 25% faster (0.1 * 1.25)
     const collisionMargin = 0.5; // Distance from wall to stop
 
     window.addEventListener('keydown', (e) => {

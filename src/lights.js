@@ -110,7 +110,7 @@ export function createCornerNeonLights() {
     corners.forEach((corner, index) => {
         const neonRadius = (tileSize * 0.9 * 2/3) / 2;
 
-        const neonGeometry = new THREE.CylinderGeometry(neonRadius, neonRadius, neonHeight, 32);
+        const neonGeometry = new THREE.CylinderGeometry(neonRadius, neonRadius, neonHeight, 16); // Reduced from 32
         const neonMaterial = new THREE.MeshStandardMaterial({
             color: COLORS.neon[index],
             emissive: COLORS.neon[index],

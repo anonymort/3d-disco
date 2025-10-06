@@ -27,11 +27,15 @@ export function createCamera() {
 }
 
 export function createRenderer() {
-    const renderer = new THREE.WebGLRenderer({ antialias: RENDERER_CONFIG.antialias });
+    const renderer = new THREE.WebGLRenderer({
+        antialias: RENDERER_CONFIG.antialias,
+        powerPreference: 'high-performance', // Use dedicated GPU
+        stencil: false, // Disable stencil buffer if not needed
+        depth: true
+    });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.shadowMap.enabled = RENDERER_CONFIG.shadowMap;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Cap at 2x for performance
+    renderer.shadowMap.enabled = false; // Disable shadows for performance
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = RENDERER_CONFIG.toneMappingExposure;
     renderer.domElement.style.width = '100%';

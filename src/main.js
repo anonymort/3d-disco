@@ -12,7 +12,6 @@ import {
     createLaserBeams
 } from './lights.js';
 import { createDiscoBall } from './discoBall.js';
-import { createParticleSystem } from './particles.js';
 import { createAudioSystem, startBeat } from './audio.js';
 import { setupCameraControls } from './controls.js';
 import {
@@ -23,8 +22,7 @@ import {
     animateCeilingPanels,
     animateLaserBeams,
     animateBackWallPanels,
-    animateCornerNeonLights,
-    animateParticles
+    animateCornerNeonLights
 } from './animations.js';
 
 console.log('Three.js loaded:', THREE.REVISION);
@@ -94,10 +92,6 @@ pointLights.forEach(pointLight => scene.add(pointLight.light));
 const laserBeams = createLaserBeams();
 laserBeams.forEach(laser => scene.add(laser.mesh));
 
-// Create particles
-const { system: particleSystem, velocities: particleVelocities } = createParticleSystem();
-scene.add(particleSystem);
-
 // Setup audio
 const { audioContext, masterGain } = createAudioSystem();
 startBeat(audioContext, masterGain);
@@ -107,22 +101,29 @@ const { updateCameraMovement } = setupCameraControls(camera);
 
 // Animation loop
 let time = 0;
+let frameCount = 0;
 
 function animate() {
     requestAnimationFrame(animate);
 
     time += 16; // Approximate milliseconds per frame
+    frameCount++;
 
     updateCameraMovement();
-    animateDanceFloor(danceFloorTiles);
+
+    // Animate disco ball and core elements every frame
     animateDiscoBall(discoBallGroup, discoBallFacets, time);
     animateSpotlights(spotlights, discoBallGroup, time);
-    animatePointLights(pointLights, time);
-    animateCeilingPanels(ceilingPanels);
     animateLaserBeams(laserBeams, time);
-    animateBackWallPanels(backWallPanels);
-    animateCornerNeonLights(cornerNeonLights);
-    animateParticles(particleSystem, particleVelocities);
+
+    // Animate lights and panels every other frame
+    if (frameCount % 2 === 0) {
+        animateDanceFloor(danceFloorTiles);
+        animatePointLights(pointLights, time);
+        animateCeilingPanels(ceilingPanels);
+        animateBackWallPanels(backWallPanels);
+        animateCornerNeonLights(cornerNeonLights);
+    }
 
     composer.render();
 }

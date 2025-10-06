@@ -10,7 +10,7 @@ export const CAMERA_CONFIG = {
     near: 0.1,
     far: 1000,
     initialPosition: { x: 0, y: 1.76, z: 0 },
-    rotationSpeed: 0.02
+    rotationSpeed: 0.025 // 25% faster (0.02 * 1.25)
 };
 
 export const DANCE_FLOOR_CONFIG = {
@@ -26,9 +26,9 @@ export const DANCE_FLOOR_CONFIG = {
 
 export const DISCO_BALL_CONFIG = {
     radius: 1.5,
-    rows: 30,
-    tilesPerRow: 40,
-    tileSize: 0.12,
+    rows: 20, // Reduced from 30 for better performance
+    tilesPerRow: 25, // Reduced from 40 for better performance
+    tileSize: 0.15, // Increased slightly to compensate
     position: { x: 0, y: 8, z: 0 }, // roomHeight - 2
     material: {
         roughness: 0.01,
@@ -93,12 +93,6 @@ export const LASER_CONFIG = {
     count: 6,
     colors: [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff],
     radius: 0.05,
-    opacity: 0.8
-};
-
-export const PARTICLE_CONFIG = {
-    count: 300,
-    size: 0.15,
     opacity: 0.8
 };
 

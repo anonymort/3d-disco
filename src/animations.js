@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ROOM_CONFIG, DANCE_FLOOR_CONFIG, AUDIO_CONFIG, PARTICLE_CONFIG, LIGHTING_CONFIG } from './config.js';
+import { DANCE_FLOOR_CONFIG, AUDIO_CONFIG, LIGHTING_CONFIG } from './config.js';
 
 export function animateDanceFloor(danceFloorTiles) {
     for (let i = 0; i < danceFloorTiles.length; i++) {
@@ -135,21 +135,4 @@ export function animateCornerNeonLights(cornerNeonLights) {
         neon.material.color.copy(neon.currentColor);
         neon.material.emissive.copy(neon.currentColor);
     });
-}
-
-export function animateParticles(particleSystem, particleVelocities) {
-    const positions = particleSystem.geometry.attributes.position.array;
-
-    for (let i = 0; i < PARTICLE_CONFIG.count; i++) {
-        positions[i * 3] += particleVelocities[i].x;
-        positions[i * 3 + 1] += particleVelocities[i].y;
-        positions[i * 3 + 2] += particleVelocities[i].z;
-
-        // Wrap around room boundaries
-        if (Math.abs(positions[i * 3]) > ROOM_CONFIG.size / 2) particleVelocities[i].x *= -1;
-        if (positions[i * 3 + 1] > ROOM_CONFIG.height || positions[i * 3 + 1] < 0) particleVelocities[i].y *= -1;
-        if (Math.abs(positions[i * 3 + 2]) > ROOM_CONFIG.size / 2) particleVelocities[i].z *= -1;
-    }
-
-    particleSystem.geometry.attributes.position.needsUpdate = true;
 }

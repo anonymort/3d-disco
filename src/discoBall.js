@@ -8,8 +8,8 @@ export function createDiscoBall() {
     // Create base sphere
     const baseSphereGeometry = new THREE.SphereGeometry(
         DISCO_BALL_CONFIG.radius * 0.98,
-        64,
-        64
+        32, // Reduced from 64 for better performance
+        32  // Reduced from 64 for better performance
     );
     const baseSphereMaterial = new THREE.MeshStandardMaterial({
         color: 0x111111,

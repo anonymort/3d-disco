@@ -10,7 +10,8 @@ export function createFloor() {
     });
     const floor = new THREE.Mesh(floorGeometry, floorMaterial);
     floor.rotation.x = -Math.PI / 2;
-    floor.receiveShadow = true;
+    floor.matrixAutoUpdate = false;
+    floor.updateMatrix();
     return floor;
 }
 
@@ -24,6 +25,8 @@ export function createCeiling() {
     const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
     ceiling.position.y = ROOM_CONFIG.height;
     ceiling.rotation.x = Math.PI / 2;
+    ceiling.matrixAutoUpdate = false;
+    ceiling.updateMatrix();
     return ceiling;
 }
 
@@ -41,7 +44,8 @@ export function createWalls() {
     const backWall = new THREE.Mesh(backWallGeometry, wallMaterial);
     backWall.position.z = -ROOM_CONFIG.size / 2;
     backWall.position.y = ROOM_CONFIG.height / 2;
-    backWall.receiveShadow = true;
+    backWall.matrixAutoUpdate = false;
+    backWall.updateMatrix();
     walls.push(backWall);
 
     // Right wall
@@ -50,7 +54,8 @@ export function createWalls() {
     rightWall.position.x = ROOM_CONFIG.size / 2;
     rightWall.position.y = ROOM_CONFIG.height / 2;
     rightWall.rotation.y = -Math.PI / 2;
-    rightWall.receiveShadow = true;
+    rightWall.matrixAutoUpdate = false;
+    rightWall.updateMatrix();
     walls.push(rightWall);
 
     // Left wall with entrance
@@ -92,7 +97,8 @@ function createLeftWallWithEntrance(wallMaterial) {
     const leftWall = new THREE.Mesh(leftWallGeometry, wallMaterial);
     leftWall.position.x = -ROOM_CONFIG.size / 2;
     leftWall.rotation.y = Math.PI / 2;
-    leftWall.receiveShadow = true;
+    leftWall.matrixAutoUpdate = false;
+    leftWall.updateMatrix();
 
     return leftWall;
 }
@@ -292,7 +298,7 @@ export function createSpeakers() {
         speakerGroup.add(speaker);
 
         // Speaker cones
-        const coneGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.1, 32);
+        const coneGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.1, 16); // Reduced from 32
         const coneMaterial = new THREE.MeshStandardMaterial({
             color: 0x222222,
             roughness: 0.6,
@@ -312,7 +318,7 @@ export function createSpeakers() {
         speakerGroup.add(cone2);
 
         // LED indicator
-        const ledGeometry = new THREE.CircleGeometry(0.1, 16);
+        const ledGeometry = new THREE.CircleGeometry(0.1, 8); // Reduced from 16
         const ledMaterial = new THREE.MeshStandardMaterial({
             color: 0x00ff00,
             emissive: 0x00ff00,
