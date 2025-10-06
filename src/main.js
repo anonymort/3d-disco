@@ -11,20 +11,24 @@ scene.background = new THREE.Color(0x1a1a2e);
 scene.fog = new THREE.FogExp2(0x1a1a2e, 0.03); // Enhanced exponential fog for better depth
 
 // Camera setup
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 8, 20);
-camera.lookAt(0, 2, 0);
+const camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 1000); // Increased FOV to 100 for fuller screen
+camera.position.set(0, 1.76, 0); // Start at middle of dance floor, 10% higher (1.6 * 1.1)
+let cameraRotation = 0; // Initial rotation angle
 
 // Renderer setup
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 console.log('Renderer created:', renderer);
 console.log('WebGL context:', renderer.getContext());
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio); // Ensure proper pixel ratio
 console.log('Renderer size set:', window.innerWidth, 'x', window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.2;
+renderer.domElement.style.width = '100%';
+renderer.domElement.style.height = '100%';
+renderer.domElement.style.display = 'block';
 document.body.appendChild(renderer.domElement);
 console.log('Canvas appended to body. Canvas element:', renderer.domElement);
 console.log('Canvas dimensions:', renderer.domElement.width, 'x', renderer.domElement.height);
@@ -743,6 +747,34 @@ window.addEventListener('resize', () => {
     console.log('Resized to:', width, 'x', height);
 });
 
+// Keyboard controls for camera rotation
+const keys = {};
+window.addEventListener('keydown', (e) => {
+    keys[e.key.toLowerCase()] = true;
+});
+
+window.addEventListener('keyup', (e) => {
+    keys[e.key.toLowerCase()] = false;
+});
+
+// Update camera rotation based on keys
+function updateCameraRotation() {
+    const rotationSpeed = 0.02;
+
+    if (keys['a']) {
+        cameraRotation += rotationSpeed;
+    }
+    if (keys['d']) {
+        cameraRotation -= rotationSpeed;
+    }
+
+    // Update camera look direction
+    const lookDistance = 10;
+    const lookX = Math.sin(cameraRotation) * lookDistance;
+    const lookZ = Math.cos(cameraRotation) * lookDistance;
+    camera.lookAt(camera.position.x + lookX, camera.position.y, camera.position.z + lookZ);
+}
+
 // Animation variables
 let time = 0;
 
@@ -1006,6 +1038,7 @@ function animate() {
 
     time += 16; // Approximate milliseconds per frame
 
+    updateCameraRotation(); // Update camera rotation based on keyboard input
     animateDanceFloor();
     animateLights();
 
