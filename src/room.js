@@ -379,8 +379,18 @@ export function createSpeakers() {
         return speakerGroup;
     }
 
-    const leftSpeaker = createSpeaker(-ROOM_CONFIG.size / 2 + 1.5, -ROOM_CONFIG.size / 2 + 1);
-    const rightSpeaker = createSpeaker(ROOM_CONFIG.size / 2 - 1.5, -ROOM_CONFIG.size / 2 + 1);
+    // Position speakers next to DJ booth
+    const djBoothZ = -ROOM_CONFIG.size / 2 + DJ_BOOTH_CONFIG.depth / 2 + 0.1;
+    const speakerSpacing = 1; // Distance from DJ booth edge
+
+    const leftSpeaker = createSpeaker(
+        -(DJ_BOOTH_CONFIG.width / 2 + speakerSpacing),
+        djBoothZ
+    );
+    const rightSpeaker = createSpeaker(
+        (DJ_BOOTH_CONFIG.width / 2 + speakerSpacing),
+        djBoothZ
+    );
 
     return [leftSpeaker, rightSpeaker];
 }

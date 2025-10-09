@@ -19,7 +19,7 @@ export const DANCE_FLOOR_CONFIG = {
     tileMaterial: {
         roughness: 0.1,
         metalness: 0.9,
-        emissiveIntensity: 0.3,
+        emissiveIntensity: 0.15, // Reduced from 0.3 to prevent bloom
         envMapIntensity: 1.5
     }
 };
@@ -114,7 +114,7 @@ export const RENDERER_CONFIG = {
 export const BLOOM_CONFIG = {
     strength: 1.5,
     radius: 0.4,
-    threshold: 0.85
+    threshold: 0.9 // Increased from 0.85 to reduce bloom on dance floor
 };
 
 export const COLORS = {

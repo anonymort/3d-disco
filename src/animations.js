@@ -14,6 +14,7 @@ export function animateDanceFloor(danceFloorTiles) {
         // Interpolate color smoothly
         tile.currentColor.lerp(tile.targetColor, 0.1);
         tile.material.color.copy(tile.currentColor);
+        tile.material.emissive.copy(tile.currentColor);
     }
 }
 

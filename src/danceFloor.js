@@ -17,10 +17,13 @@ export function createDanceFloor() {
                 Math.floor(Math.random() * DANCE_FLOOR_CONFIG.tileColors.length)
             ];
 
-            // Use MeshBasicMaterial for better performance - no lighting calculations
-            const tileMaterial = new THREE.MeshBasicMaterial({
+            // Use MeshStandardMaterial with emissive for uniform, glowing tiles
+            const tileMaterial = new THREE.MeshStandardMaterial({
                 color: randomColor,
-                toneMapped: false // Prevent tone mapping from darkening colors
+                emissive: randomColor,
+                emissiveIntensity: DANCE_FLOOR_CONFIG.tileMaterial.emissiveIntensity,
+                roughness: DANCE_FLOOR_CONFIG.tileMaterial.roughness,
+                metalness: DANCE_FLOOR_CONFIG.tileMaterial.metalness
             });
 
             const tile = new THREE.Mesh(sharedTileGeometry, tileMaterial);
@@ -30,7 +33,7 @@ export function createDanceFloor() {
                 (j - DANCE_FLOOR_CONFIG.gridSize / 2) * tileSize + tileSize / 2
             );
             tile.rotation.x = -Math.PI / 2;
-            tile.receiveShadow = true;
+            tile.receiveShadow = false; // Disable shadow receiving for uniform brightness
             tile.matrixAutoUpdate = false; // Static object - disable matrix updates
             tile.updateMatrix();
 
