@@ -59,8 +59,8 @@ const speakers = createSpeakers();
 speakers.forEach(speaker => scene.add(speaker));
 
 // Create dance floor
-const { mesh: danceFloorMesh, currentColors: danceFloorCurrentColors, targetColors: danceFloorTargetColors, tileCount: danceFloorTileCount } = createDanceFloor();
-scene.add(danceFloorMesh);
+const { group: danceFloorGroup, tiles: danceFloorTiles } = createDanceFloor();
+scene.add(danceFloorGroup);
 
 // Create lights
 const basicLights = createBasicLights();
@@ -118,7 +118,7 @@ function animate() {
 
     // Animate lights and panels every other frame
     if (frameCount % 2 === 0) {
-        animateDanceFloor(danceFloorMesh, danceFloorCurrentColors, danceFloorTargetColors, danceFloorTileCount);
+        animateDanceFloor(danceFloorTiles);
         animatePointLights(pointLights, time);
         animateCeilingPanels(ceilingPanelsMesh, ceilingCurrentColors, ceilingTargetColors, ceilingCurrentIntensities, ceilingTargetIntensities, ceilingPanelCount);
         animateBackWallPanels(backWallPanelsMesh, backWallCurrentColors, backWallTargetColors, backWallPanelCount);

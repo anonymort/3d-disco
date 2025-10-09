@@ -1,31 +1,20 @@
 import * as THREE from 'three';
 import { DANCE_FLOOR_CONFIG, AUDIO_CONFIG, LIGHTING_CONFIG } from './config.js';
 
-export function animateDanceFloor(instancedTiles, currentColors, targetColors, tileCount) {
-    const color = new THREE.Color();
-    const brightness = 3.0; // Much brighter for visibility
+export function animateDanceFloor(danceFloorTiles) {
+    for (let i = 0; i < danceFloorTiles.length; i++) {
+        const tile = danceFloorTiles[i];
 
-    for (let i = 0; i < tileCount; i++) {
         // Random color changes
         if (Math.random() < 0.01) {
             const colors = DANCE_FLOOR_CONFIG.tileColors;
-            const newColor = new THREE.Color(colors[Math.floor(Math.random() * colors.length)]);
-            targetColors[i * 3] = newColor.r * brightness;
-            targetColors[i * 3 + 1] = newColor.g * brightness;
-            targetColors[i * 3 + 2] = newColor.b * brightness;
+            tile.targetColor.setHex(colors[Math.floor(Math.random() * colors.length)]);
         }
 
         // Interpolate color smoothly
-        currentColors[i * 3] += (targetColors[i * 3] - currentColors[i * 3]) * 0.1;
-        currentColors[i * 3 + 1] += (targetColors[i * 3 + 1] - currentColors[i * 3 + 1]) * 0.1;
-        currentColors[i * 3 + 2] += (targetColors[i * 3 + 2] - currentColors[i * 3 + 2]) * 0.1;
-
-        // Set instance color
-        color.setRGB(currentColors[i * 3], currentColors[i * 3 + 1], currentColors[i * 3 + 2]);
-        instancedTiles.setColorAt(i, color);
+        tile.currentColor.lerp(tile.targetColor, 0.1);
+        tile.material.color.copy(tile.currentColor);
     }
-
-    instancedTiles.instanceColor.needsUpdate = true;
 }
 
 export function animateDiscoBall(discoBallGroup, instancedFacets, facetCount, baseIntensity, time) {

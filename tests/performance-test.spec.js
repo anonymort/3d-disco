@@ -13,7 +13,7 @@ test('3D disco scene loads and renders with optimized performance', async ({ pag
     });
 
     // Navigate to the app
-    await page.goto('http://localhost:5173');
+    await page.goto('http://localhost:5174');
 
     // Wait for Three.js to load
     await page.waitForTimeout(2000);
