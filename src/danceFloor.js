@@ -22,8 +22,8 @@ export function createDanceFloor() {
     );
     instancedTiles.receiveShadow = true;
 
-    // Important: Must set count property for InstancedMesh to render
-    instancedTiles.count = totalTiles;
+    // Create instanceColor attribute for per-instance colors
+    instancedTiles.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(totalTiles * 3), 3);
 
     // Set up instances and color data
     const matrix = new THREE.Matrix4();
