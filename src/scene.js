@@ -49,8 +49,9 @@ export function createComposer(renderer, scene, camera) {
     const renderPass = new RenderPass(scene, camera);
     composer.addPass(renderPass);
 
+    // Use 50% resolution for bloom to improve performance
     const bloomPass = new UnrealBloomPass(
-        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        new THREE.Vector2(window.innerWidth * 0.5, window.innerHeight * 0.5),
         BLOOM_CONFIG.strength,
         BLOOM_CONFIG.radius,
         BLOOM_CONFIG.threshold

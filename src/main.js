@@ -59,24 +59,24 @@ const speakers = createSpeakers();
 speakers.forEach(speaker => scene.add(speaker));
 
 // Create dance floor
-const { group: danceFloorGroup, tiles: danceFloorTiles } = createDanceFloor();
-scene.add(danceFloorGroup);
+const { mesh: danceFloorMesh, currentColors: danceFloorCurrentColors, targetColors: danceFloorTargetColors, tileCount: danceFloorTileCount } = createDanceFloor();
+scene.add(danceFloorMesh);
 
 // Create lights
 const basicLights = createBasicLights();
 basicLights.forEach(light => scene.add(light));
 
-const ceilingPanels = createCeilingPanels();
-ceilingPanels.forEach(panel => scene.add(panel.mesh));
+const { mesh: ceilingPanelsMesh, currentColors: ceilingCurrentColors, targetColors: ceilingTargetColors, currentIntensities: ceilingCurrentIntensities, targetIntensities: ceilingTargetIntensities, panelCount: ceilingPanelCount } = createCeilingPanels();
+scene.add(ceilingPanelsMesh);
 
-const backWallPanels = createBackWallPanels();
-backWallPanels.forEach(panel => scene.add(panel.mesh));
+const { mesh: backWallPanelsMesh, currentColors: backWallCurrentColors, targetColors: backWallTargetColors, panelCount: backWallPanelCount } = createBackWallPanels();
+scene.add(backWallPanelsMesh);
 
-const cornerNeonLights = createCornerNeonLights();
-cornerNeonLights.forEach(neon => scene.add(neon.mesh));
+const { mesh: cornerNeonMesh, currentColors: neonCurrentColors, targetColors: neonTargetColors, neonCount: cornerNeonCount } = createCornerNeonLights();
+scene.add(cornerNeonMesh);
 
 // Create disco ball
-const { group: discoBallGroup, facets: discoBallFacets } = createDiscoBall();
+const { group: discoBallGroup, instancedFacets: discoBallInstancedFacets, facetCount: discoBallFacetCount, baseIntensity: discoBallBaseIntensity } = createDiscoBall();
 scene.add(discoBallGroup);
 
 // Create spotlights (requires disco ball position)
@@ -112,17 +112,17 @@ function animate() {
     updateCameraMovement();
 
     // Animate disco ball and core elements every frame
-    animateDiscoBall(discoBallGroup, discoBallFacets, time);
+    animateDiscoBall(discoBallGroup, discoBallInstancedFacets, discoBallFacetCount, discoBallBaseIntensity, time);
     animateSpotlights(spotlights, discoBallGroup, time);
     animateLaserBeams(laserBeams, time);
 
     // Animate lights and panels every other frame
     if (frameCount % 2 === 0) {
-        animateDanceFloor(danceFloorTiles);
+        animateDanceFloor(danceFloorMesh, danceFloorCurrentColors, danceFloorTargetColors, danceFloorTileCount);
         animatePointLights(pointLights, time);
-        animateCeilingPanels(ceilingPanels);
-        animateBackWallPanels(backWallPanels);
-        animateCornerNeonLights(cornerNeonLights);
+        animateCeilingPanels(ceilingPanelsMesh, ceilingCurrentColors, ceilingTargetColors, ceilingCurrentIntensities, ceilingTargetIntensities, ceilingPanelCount);
+        animateBackWallPanels(backWallPanelsMesh, backWallCurrentColors, backWallTargetColors, backWallPanelCount);
+        animateCornerNeonLights(cornerNeonMesh, neonCurrentColors, neonTargetColors, cornerNeonCount);
     }
 
     composer.render();

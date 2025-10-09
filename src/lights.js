@@ -25,80 +25,140 @@ export function createBasicLights() {
 }
 
 export function createCeilingPanels() {
-    const ceilingPanels = [];
     const panelSpacing = CEILING_PANEL_CONFIG.spacing;
     const panelsPerRow = CEILING_PANEL_CONFIG.panelsPerRow;
+    const totalPanels = panelsPerRow * panelsPerRow;
 
+    const panelGeometry = new THREE.PlaneGeometry(
+        CEILING_PANEL_CONFIG.size,
+        CEILING_PANEL_CONFIG.size
+    );
+
+    // Use MeshBasicMaterial for emissive panels
+    const panelMaterial = new THREE.MeshBasicMaterial({
+        vertexColors: true,
+        toneMapped: false
+    });
+
+    const instancedPanels = new THREE.InstancedMesh(
+        panelGeometry,
+        panelMaterial,
+        totalPanels
+    );
+    instancedPanels.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(totalPanels * 3), 3);
+
+    const matrix = new THREE.Matrix4();
+    const quaternion = new THREE.Quaternion();
+    quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+
+    const currentColors = new Float32Array(totalPanels * 3);
+    const targetColors = new Float32Array(totalPanels * 3);
+    const currentIntensities = new Float32Array(totalPanels);
+    const targetIntensities = new Float32Array(totalPanels);
+
+    let index = 0;
     for (let i = 0; i < panelsPerRow; i++) {
         for (let j = 0; j < panelsPerRow; j++) {
-            const panelGeometry = new THREE.PlaneGeometry(
-                CEILING_PANEL_CONFIG.size,
-                CEILING_PANEL_CONFIG.size
-            );
-            const panelMaterial = new THREE.MeshStandardMaterial({
-                color: 0xff0000,
-                emissive: 0xff0000,
-                emissiveIntensity: CEILING_PANEL_CONFIG.emissiveIntensity,
-                roughness: 0.1,
-                metalness: 0.2
-            });
-
-            const panel = new THREE.Mesh(panelGeometry, panelMaterial);
             const xPos = (i - panelsPerRow / 2 + 0.5) * panelSpacing;
             const zPos = (j - panelsPerRow / 2 + 0.5) * panelSpacing;
 
-            panel.position.set(xPos, ROOM_CONFIG.height - 0.1, zPos);
-            panel.rotation.x = Math.PI / 2;
+            matrix.compose(
+                new THREE.Vector3(xPos, ROOM_CONFIG.height - 0.1, zPos),
+                quaternion,
+                new THREE.Vector3(1, 1, 1)
+            );
+            instancedPanels.setMatrixAt(index, matrix);
 
-            ceilingPanels.push({
-                mesh: panel,
-                material: panelMaterial,
-                targetColor: new THREE.Color(0xff0000),
-                currentColor: new THREE.Color(0xff0000),
-                targetIntensity: CEILING_PANEL_CONFIG.emissiveIntensity,
-                currentIntensity: CEILING_PANEL_CONFIG.emissiveIntensity
-            });
+            const color = new THREE.Color(0xff0000);
+            currentColors[index * 3] = color.r;
+            currentColors[index * 3 + 1] = color.g;
+            currentColors[index * 3 + 2] = color.b;
+            targetColors[index * 3] = color.r;
+            targetColors[index * 3 + 1] = color.g;
+            targetColors[index * 3 + 2] = color.b;
+
+            currentIntensities[index] = CEILING_PANEL_CONFIG.emissiveIntensity;
+            targetIntensities[index] = CEILING_PANEL_CONFIG.emissiveIntensity;
+
+            instancedPanels.setColorAt(index, color);
+            index++;
         }
     }
 
-    return ceilingPanels;
+    instancedPanels.instanceMatrix.needsUpdate = true;
+    instancedPanels.instanceColor.needsUpdate = true;
+
+    return {
+        mesh: instancedPanels,
+        currentColors: currentColors,
+        targetColors: targetColors,
+        currentIntensities: currentIntensities,
+        targetIntensities: targetIntensities,
+        panelCount: totalPanels
+    };
 }
 
 export function createBackWallPanels() {
-    const backWallPanels = [];
     const panelCount = 8;
     const panelWidth = 1.2;
     const panelHeight = 1.5;
 
+    const panelGeometry = new THREE.BoxGeometry(panelWidth, panelHeight, 0.1);
+
+    // Use MeshBasicMaterial for emissive panels
+    const panelMaterial = new THREE.MeshBasicMaterial({
+        vertexColors: true,
+        toneMapped: false
+    });
+
+    const instancedPanels = new THREE.InstancedMesh(
+        panelGeometry,
+        panelMaterial,
+        panelCount
+    );
+    instancedPanels.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(panelCount * 3), 3);
+
+    const matrix = new THREE.Matrix4();
+    const currentColors = new Float32Array(panelCount * 3);
+    const targetColors = new Float32Array(panelCount * 3);
+
     for (let i = 0; i < panelCount; i++) {
-        const panelGeometry = new THREE.BoxGeometry(panelWidth, panelHeight, 0.1);
-        const panelMaterial = new THREE.MeshStandardMaterial({
-            color: 0xff0000,
-            emissive: 0xff0000,
-            emissiveIntensity: 1,
-            roughness: 0.2,
-            metalness: 0.5
-        });
-
-        const panel = new THREE.Mesh(panelGeometry, panelMaterial);
         const xPos = (i - panelCount / 2 + 0.5) * (panelWidth + 0.3);
-        panel.position.set(xPos, ROOM_CONFIG.height - 2, -ROOM_CONFIG.size / 2 + 0.05);
 
-        backWallPanels.push({
-            mesh: panel,
-            material: panelMaterial,
-            targetColor: new THREE.Color(0xff0000),
-            currentColor: new THREE.Color(0xff0000)
-        });
+        matrix.compose(
+            new THREE.Vector3(xPos, ROOM_CONFIG.height - 2, -ROOM_CONFIG.size / 2 + 0.05),
+            new THREE.Quaternion(),
+            new THREE.Vector3(1, 1, 1)
+        );
+        instancedPanels.setMatrixAt(i, matrix);
+
+        const color = new THREE.Color(0xff0000);
+        currentColors[i * 3] = color.r;
+        currentColors[i * 3 + 1] = color.g;
+        currentColors[i * 3 + 2] = color.b;
+        targetColors[i * 3] = color.r;
+        targetColors[i * 3 + 1] = color.g;
+        targetColors[i * 3 + 2] = color.b;
+
+        instancedPanels.setColorAt(i, color);
     }
 
-    return backWallPanels;
+    instancedPanels.instanceMatrix.needsUpdate = true;
+    instancedPanels.instanceColor.needsUpdate = true;
+
+    return {
+        mesh: instancedPanels,
+        currentColors: currentColors,
+        targetColors: targetColors,
+        panelCount: panelCount
+    };
 }
 
 export function createCornerNeonLights() {
-    const cornerNeonLights = [];
     const neonHeight = ROOM_CONFIG.height;
     const tileSize = ROOM_CONFIG.size / 20; // gridSize from danceFloor
+    const neonRadius = (tileSize * 0.9 * 2/3) / 2;
+    const neonCount = 4;
 
     const corners = [
         { x: -ROOM_CONFIG.size / 2 + tileSize / 2, z: -ROOM_CONFIG.size / 2 + tileSize / 2 },
@@ -107,32 +167,56 @@ export function createCornerNeonLights() {
         { x: ROOM_CONFIG.size / 2 - tileSize / 2, z: ROOM_CONFIG.size / 2 - tileSize / 2 }
     ];
 
-    corners.forEach((corner, index) => {
-        const neonRadius = (tileSize * 0.9 * 2/3) / 2;
+    const neonGeometry = new THREE.CylinderGeometry(neonRadius, neonRadius, neonHeight, 16);
 
-        const neonGeometry = new THREE.CylinderGeometry(neonRadius, neonRadius, neonHeight, 16); // Reduced from 32
-        const neonMaterial = new THREE.MeshStandardMaterial({
-            color: COLORS.neon[index],
-            emissive: COLORS.neon[index],
-            emissiveIntensity: 2.5,
-            roughness: 0.1,
-            metalness: 0.3,
-            transparent: true,
-            opacity: 0.8
-        });
-
-        const neon = new THREE.Mesh(neonGeometry, neonMaterial);
-        neon.position.set(corner.x, ROOM_CONFIG.height / 2, corner.z);
-
-        cornerNeonLights.push({
-            mesh: neon,
-            material: neonMaterial,
-            targetColor: new THREE.Color(COLORS.neon[index]),
-            currentColor: new THREE.Color(COLORS.neon[index])
-        });
+    // Use MeshBasicMaterial for emissive neon
+    const neonMaterial = new THREE.MeshBasicMaterial({
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.8,
+        toneMapped: false
     });
 
-    return cornerNeonLights;
+    const instancedNeons = new THREE.InstancedMesh(
+        neonGeometry,
+        neonMaterial,
+        neonCount
+    );
+    instancedNeons.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(neonCount * 3), 3);
+
+    const matrix = new THREE.Matrix4();
+    const currentColors = new Float32Array(neonCount * 3);
+    const targetColors = new Float32Array(neonCount * 3);
+
+    corners.forEach((corner, index) => {
+        matrix.compose(
+            new THREE.Vector3(corner.x, ROOM_CONFIG.height / 2, corner.z),
+            new THREE.Quaternion(),
+            new THREE.Vector3(1, 1, 1)
+        );
+        instancedNeons.setMatrixAt(index, matrix);
+
+        const color = new THREE.Color(COLORS.neon[index]);
+        const intensity = 2.5;
+        currentColors[index * 3] = color.r * intensity;
+        currentColors[index * 3 + 1] = color.g * intensity;
+        currentColors[index * 3 + 2] = color.b * intensity;
+        targetColors[index * 3] = color.r * intensity;
+        targetColors[index * 3 + 1] = color.g * intensity;
+        targetColors[index * 3 + 2] = color.b * intensity;
+
+        instancedNeons.setColorAt(index, new THREE.Color(color.r * intensity, color.g * intensity, color.b * intensity));
+    });
+
+    instancedNeons.instanceMatrix.needsUpdate = true;
+    instancedNeons.instanceColor.needsUpdate = true;
+
+    return {
+        mesh: instancedNeons,
+        currentColors: currentColors,
+        targetColors: targetColors,
+        neonCount: neonCount
+    };
 }
 
 export function createSpotlights(discoBall) {

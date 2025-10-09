@@ -1,35 +1,56 @@
 import * as THREE from 'three';
 import { DANCE_FLOOR_CONFIG, AUDIO_CONFIG, LIGHTING_CONFIG } from './config.js';
 
-export function animateDanceFloor(danceFloorTiles) {
-    for (let i = 0; i < danceFloorTiles.length; i++) {
-        const tile = danceFloorTiles[i];
+export function animateDanceFloor(instancedTiles, currentColors, targetColors, tileCount) {
+    const color = new THREE.Color();
+    const brightness = 3.0; // Much brighter for visibility
 
+    for (let i = 0; i < tileCount; i++) {
         // Random color changes
         if (Math.random() < 0.01) {
             const colors = DANCE_FLOOR_CONFIG.tileColors;
-            tile.targetColor.setHex(colors[Math.floor(Math.random() * colors.length)]);
+            const newColor = new THREE.Color(colors[Math.floor(Math.random() * colors.length)]);
+            targetColors[i * 3] = newColor.r * brightness;
+            targetColors[i * 3 + 1] = newColor.g * brightness;
+            targetColors[i * 3 + 2] = newColor.b * brightness;
         }
 
         // Interpolate color smoothly
-        tile.currentColor.lerp(tile.targetColor, 0.1);
-        tile.material.color.copy(tile.currentColor);
-        tile.material.emissive.copy(tile.currentColor);
-        tile.material.emissiveIntensity = DANCE_FLOOR_CONFIG.tileMaterial.emissiveIntensity;
+        currentColors[i * 3] += (targetColors[i * 3] - currentColors[i * 3]) * 0.1;
+        currentColors[i * 3 + 1] += (targetColors[i * 3 + 1] - currentColors[i * 3 + 1]) * 0.1;
+        currentColors[i * 3 + 2] += (targetColors[i * 3 + 2] - currentColors[i * 3 + 2]) * 0.1;
+
+        // Set instance color
+        color.setRGB(currentColors[i * 3], currentColors[i * 3 + 1], currentColors[i * 3 + 2]);
+        instancedTiles.setColorAt(i, color);
     }
+
+    instancedTiles.instanceColor.needsUpdate = true;
 }
 
-export function animateDiscoBall(discoBall, discoBallFacets, time) {
+export function animateDiscoBall(discoBallGroup, instancedFacets, facetCount, baseIntensity, time) {
     // Rotate disco ball
-    discoBall.rotation.y += 0.01;
+    discoBallGroup.rotation.y += 0.01;
 
-    // Animate disco ball facets for sparkle effect
+    // Animate disco ball facets for sparkle effect using color variation
     const beatPhase = (time % AUDIO_CONFIG.beatInterval) / AUDIO_CONFIG.beatInterval;
-    discoBallFacets.forEach((facet, index) => {
-        const beatPulse = Math.sin(beatPhase * Math.PI) * 0.5;
-        const sparkle = Math.sin(time * 0.005 + index * 0.1) * 0.5 + 0.5;
-        facet.material.emissiveIntensity = facet.baseIntensity + (sparkle + beatPulse) * 0.5;
-    });
+    const beatPulse = Math.sin(beatPhase * Math.PI) * 0.5;
+
+    // Update color based on sparkle effect
+    const color = new THREE.Color();
+    const sparkleOffsets = instancedFacets.geometry.attributes.sparkleOffset.array;
+
+    for (let i = 0; i < facetCount; i++) {
+        const sparkle = Math.sin(time * 0.005 + sparkleOffsets[i]) * 0.5 + 0.5;
+        const intensity = baseIntensity + (sparkle + beatPulse) * 0.5;
+
+        // Vary brightness by changing color intensity
+        const brightness = 0.5 + intensity * 0.5;
+        color.setRGB(brightness, brightness, brightness);
+        instancedFacets.setColorAt(i, color);
+    }
+
+    instancedFacets.instanceColor.needsUpdate = true;
 }
 
 export function animateSpotlights(spotlights, discoBall, time) {
@@ -76,23 +97,37 @@ export function animatePointLights(pointLights, time) {
     });
 }
 
-export function animateCeilingPanels(ceilingPanels) {
-    ceilingPanels.forEach((panel) => {
+export function animateCeilingPanels(instancedPanels, currentColors, targetColors, currentIntensities, targetIntensities, panelCount) {
+    const color = new THREE.Color();
+
+    for (let i = 0; i < panelCount; i++) {
         // Change color randomly
         if (Math.random() < 0.02) {
             const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff];
-            panel.targetColor.setHex(colors[Math.floor(Math.random() * colors.length)]);
-            panel.targetIntensity = Math.random() * 2 + 1;
+            const newColor = new THREE.Color(colors[Math.floor(Math.random() * colors.length)]);
+            targetColors[i * 3] = newColor.r;
+            targetColors[i * 3 + 1] = newColor.g;
+            targetColors[i * 3 + 2] = newColor.b;
+            targetIntensities[i] = Math.random() * 2 + 1;
         }
 
         // Interpolate color and intensity
-        panel.currentColor.lerp(panel.targetColor, 0.05);
-        panel.currentIntensity += (panel.targetIntensity - panel.currentIntensity) * 0.05;
+        currentColors[i * 3] += (targetColors[i * 3] - currentColors[i * 3]) * 0.05;
+        currentColors[i * 3 + 1] += (targetColors[i * 3 + 1] - currentColors[i * 3 + 1]) * 0.05;
+        currentColors[i * 3 + 2] += (targetColors[i * 3 + 2] - currentColors[i * 3 + 2]) * 0.05;
+        currentIntensities[i] += (targetIntensities[i] - currentIntensities[i]) * 0.05;
 
-        panel.material.color.copy(panel.currentColor);
-        panel.material.emissive.copy(panel.currentColor);
-        panel.material.emissiveIntensity = panel.currentIntensity;
-    });
+        // Apply intensity to color
+        const intensity = currentIntensities[i];
+        color.setRGB(
+            currentColors[i * 3] * intensity,
+            currentColors[i * 3 + 1] * intensity,
+            currentColors[i * 3 + 2] * intensity
+        );
+        instancedPanels.setColorAt(i, color);
+    }
+
+    instancedPanels.instanceColor.needsUpdate = true;
 }
 
 export function animateLaserBeams(laserBeams, time) {
@@ -107,32 +142,53 @@ export function animateLaserBeams(laserBeams, time) {
     });
 }
 
-export function animateBackWallPanels(backWallPanels) {
-    backWallPanels.forEach((panel) => {
+export function animateBackWallPanels(instancedPanels, currentColors, targetColors, panelCount) {
+    const color = new THREE.Color();
+
+    for (let i = 0; i < panelCount; i++) {
         if (Math.random() < 0.015) {
             const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff];
-            panel.targetColor.setHex(colors[Math.floor(Math.random() * colors.length)]);
+            const newColor = new THREE.Color(colors[Math.floor(Math.random() * colors.length)]);
+            targetColors[i * 3] = newColor.r;
+            targetColors[i * 3 + 1] = newColor.g;
+            targetColors[i * 3 + 2] = newColor.b;
         }
 
-        panel.currentColor.lerp(panel.targetColor, 0.05);
-        panel.material.color.copy(panel.currentColor);
-        panel.material.emissive.copy(panel.currentColor);
-    });
+        currentColors[i * 3] += (targetColors[i * 3] - currentColors[i * 3]) * 0.05;
+        currentColors[i * 3 + 1] += (targetColors[i * 3 + 1] - currentColors[i * 3 + 1]) * 0.05;
+        currentColors[i * 3 + 2] += (targetColors[i * 3 + 2] - currentColors[i * 3 + 2]) * 0.05;
+
+        color.setRGB(currentColors[i * 3], currentColors[i * 3 + 1], currentColors[i * 3 + 2]);
+        instancedPanels.setColorAt(i, color);
+    }
+
+    instancedPanels.instanceColor.needsUpdate = true;
 }
 
-export function animateCornerNeonLights(cornerNeonLights) {
+export function animateCornerNeonLights(instancedNeons, currentColors, targetColors, neonCount) {
+    const color = new THREE.Color();
+
     // All corner neons sync to same color
     if (Math.random() < 0.015) {
         const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff];
-        const newColor = colors[Math.floor(Math.random() * colors.length)];
-        cornerNeonLights.forEach((neon) => {
-            neon.targetColor.setHex(newColor);
-        });
+        const newColor = new THREE.Color(colors[Math.floor(Math.random() * colors.length)]);
+        const intensity = 2.5;
+
+        for (let i = 0; i < neonCount; i++) {
+            targetColors[i * 3] = newColor.r * intensity;
+            targetColors[i * 3 + 1] = newColor.g * intensity;
+            targetColors[i * 3 + 2] = newColor.b * intensity;
+        }
     }
 
-    cornerNeonLights.forEach((neon) => {
-        neon.currentColor.lerp(neon.targetColor, 0.05);
-        neon.material.color.copy(neon.currentColor);
-        neon.material.emissive.copy(neon.currentColor);
-    });
+    for (let i = 0; i < neonCount; i++) {
+        currentColors[i * 3] += (targetColors[i * 3] - currentColors[i * 3]) * 0.05;
+        currentColors[i * 3 + 1] += (targetColors[i * 3 + 1] - currentColors[i * 3 + 1]) * 0.05;
+        currentColors[i * 3 + 2] += (targetColors[i * 3 + 2] - currentColors[i * 3 + 2]) * 0.05;
+
+        color.setRGB(currentColors[i * 3], currentColors[i * 3 + 1], currentColors[i * 3 + 2]);
+        instancedNeons.setColorAt(i, color);
+    }
+
+    instancedNeons.instanceColor.needsUpdate = true;
 }
